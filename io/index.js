@@ -169,7 +169,7 @@ export default function async() {
         if (users.indexOf(u) > -1) {
           users.splice(users.indexOf(u), 1);
           io.emit("newChatMessage", {
-            message: branding.messages.userLeft.replace(
+            message: texts.messages.userLeft.replace(
               "{username}",
               u.username
             ),
