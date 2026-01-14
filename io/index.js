@@ -129,7 +129,7 @@ export default function async() {
         io.to(socket.id).emit("emoteDictionary", emotes);
         // TODO: SEND STATE TO USER
         io.emit("newChatMessage", {
-          message: texts.message.userJoined.replace(
+          message: texts.messages.userJoined.replace(
             "{username}",
             user.username
           ),
