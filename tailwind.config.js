@@ -9,6 +9,20 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        "spin-slow": "spin 30s linear infinite",
+        "rainbow-slow": "rainbow 45s linear infinite",
+      },
+      keyframes: {
+        rainbow: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
+      },
+      backgroundSize: {
+        "200%": "200% 200%",
+      },
       colors: {
         neutral: {
           900: "#171717",

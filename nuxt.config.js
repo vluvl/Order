@@ -1,12 +1,29 @@
+import fs from "fs";
+import path from "path";
+
+const defaultConfigPath = path.join(__dirname, "config", "text.default.json");
+const overrideConfigPath = "/app/config/text.json";
+
+function loadText() {
+  if (fs.existsSync(overrideConfigPath)) {
+    return JSON.parse(fs.readFileSync(overrideConfigPath, "utf-8"));
+  }
+  return JSON.parse(fs.readFileSync(defaultConfigPath, "utf-8"));
+}
+
 export default {
   ssr: true,
   server: {
     host: process.env.HOST || "0.0.0.0",
     port: process.env.PORT || 3000,
   },
+  serverMiddleware: [
+    "~/server-middleware/assets.js"
+  ],
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: "Radium",
+    title: "Order",
     meta: [
       { charset: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -19,6 +36,7 @@ export default {
   publicRuntimeConfig: {
     initialSourceType: process.env.INITIAL_SOURCE_TYPE,
     initialSourceUrl: process.env.INITIAL_SOURCE_URL,
+    texts: loadText(),
     io: {
       // will be available in this.$config.io
       sockets: [

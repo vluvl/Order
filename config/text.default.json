@@ -1,0 +1,17 @@
+{
+  "appName": "Order",
+  "navbarTitle": "Order Player",
+  "loginPrompt": "Enter a username to get started, or leave empty for generic name.",
+
+
+  "systemUser": {
+    "username": "Order Bot",
+    "color": "#ef4444"
+  },
+
+  "messages": {
+    "userJoined": "{username} joined the stream!",
+    "userLeft": "{username} left the stream!"
+  }
+}
+

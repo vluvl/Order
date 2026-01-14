@@ -2,11 +2,18 @@ import http from "http";
 import socketIO from "socket.io";
 import axios from "axios";
 
+const texts = require("../utils/texts");
+
 export default function async() {
   this.nuxt.hook("render:before", async (renderer) => {
     const server = http.createServer(this.nuxt.renderer.app);
     const io = socketIO(server);
 
+    const SYSTEM_USER = {
+      username: texts.systemUser.username,
+      color: texts.systemUser.color, // RED, currently overwritten by rainbow effect
+      admin: true,
+    };
     // overwrite nuxt.server.listen()
     this.nuxt.server.listen = (port, host) =>
       new Promise((resolve) =>
@@ -45,27 +52,32 @@ export default function async() {
       // BTTV
       console.log("Fetching BTTV emotes...");
       try {
-        //  Fetch top 200 bttv emotes
-        const bttvEmotesArr = []
-        const bttvEmotes1 = await axios.get(
-          "https://api.betterttv.net/3/emotes/shared/top?offset=0&limit=100"
+        // BTTV Global
+        const globalEmotes = await axios.get(
+          "https://api.betterttv.net/3/cached/emotes/global"
         );
-        const bttvEmotes2 = await axios.get("https://api.betterttv.net/3/emotes/shared/top?offset=100&limit=100")
-        for await (const emote of bttvEmotes1.data) {
-          bttvEmotesArr.push(emote)
+
+        for (const emote of globalEmotes.data) {
+          emotes.push({
+            id: emote.id,
+            code: emote.code,
+            source: "bttv",
+          });
         }
-        for await (const emote of bttvEmotes2.data) {
-          bttvEmotesArr.push(emote)
-        }
-        // Format BTTV emotes
-        for await (const emote of bttvEmotesArr) {
-          const newEmoteObject = {
+
+        // BTTV Shared Top
+        const sharedEmotes = await axios.get(
+          "https://api.betterttv.net/3/emotes/shared/top?limit=100"
+        );
+
+        for (const emote of sharedEmotes.data) {
+          emotes.push({
             id: emote.emote.id,
             code: emote.emote.code,
             source: "bttv",
-          };
-          emotes.push(newEmoteObject);
+          });
         }
+
       } catch (error) {
         console.log('Error fetching BTTV emotes: ', error);
       }
@@ -74,7 +86,7 @@ export default function async() {
       const ffzEmotes = await axios.get(
         "https://api.frankerfacez.com/v1/emotes?q=&sort=count-desc&per_page=200"
       );
-      // Format BTTV emotes
+      // Format FFZ emotes
       for await (const emote of ffzEmotes.data.emoticons) {
         const newEmoteObject = {
           id: emote.id,
@@ -83,8 +95,22 @@ export default function async() {
         };
         emotes.push(newEmoteObject);
       }
+      console.log("Fetching FFZ emotes... (Animated this time)");
+      const ffzEmotesAnim = await axios.get(
+        "https://api.frankerfacez.com/v1/emotes?q=&sort=count-desc&animated=true&per_page=50"
+      );
+      // Format FFZ emotes
+      for await (const emote of ffzEmotesAnim.data.emoticons) {
+        const newEmoteObject = {
+          id: emote.id,
+          code: emote.name,
+          source: "ffzA",
+        };
+        emotes.push(newEmoteObject);
+      }
     };
     await fetchEmotes();
+    console.log("Done with emotes");
 
     io.on("connection", (socket) => {
       connections.push(socket);
@@ -102,6 +128,16 @@ export default function async() {
         io.to(socket.id).emit("sourcesList", sources);
         io.to(socket.id).emit("emoteDictionary", emotes);
         // TODO: SEND STATE TO USER
+        io.emit("newChatMessage", {
+          message: texts.message.userJoined.replace(
+            "{username}",
+            user.username
+          ),
+          user: SYSTEM_USER,
+        });
+        io.emit("playSound", {
+          type: "join",
+        });
       });
 
       socket.on("addPlayerSource", (source) => {
@@ -132,8 +168,17 @@ export default function async() {
 
         if (users.indexOf(u) > -1) {
           users.splice(users.indexOf(u), 1);
+          io.emit("newChatMessage", {
+            message: branding.messages.userLeft.replace(
+              "{username}",
+              u.username
+            ),
+            user: SYSTEM_USER,
+          });
         }
-
+        io.emit("playSound", {
+          type: "leave",
+        });
         io.emit("usersList", users);
       });
     });
