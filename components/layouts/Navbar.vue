@@ -2,17 +2,15 @@
   <div>
     <div class="bg-neutral navbar h-16 text-neutral-content shadow-lg">
       <div class="mx-2 flex-none px-2">
-        <span class="text-lg font-bold"> Radium </span>
+	<img
+	src="/assets/serv_icon.png"
+	class="w-10 h-10 rounded-full object-cover mr-2
+               ring-2 ring-primary ring-offset-2
+               animate-spin-slow"/>
+        <span class="text-lg font-bold title-rainbow animate-rainbow-slow"> {{ $config.texts.navbarTitle }} </span>
       </div>
       <div class="mx-2 flex-1 px-2">
         <div class="hidden items-stretch lg:flex">
-          <a
-            href="https://github.com/zibbp/radium"
-            target="_blank"
-            class="btn btn-ghost rounded-btn btn-sm"
-          >
-            Github
-          </a>
         </div>
       </div>
       <div class="flex-none">
@@ -81,4 +79,20 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+/* Navbar title rainbow */
+.title-rainbow {
+  background: linear-gradient(
+    90deg,
+    #5ddb14, /* lime */
+    #4ade80, /* green */
+    #21e3ed, /* cyan */
+    #60a5fa, /* blue */
+    #c084fc, /* purple */
+    #db14ce  /* pink */
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+</style>
