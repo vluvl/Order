@@ -13,7 +13,7 @@ export default {
       player: null,
       options: {
         volume: 25,
-        autoStart: true,
+        autoStart: false,
         mute: false,
         sources: [],
         webrtcConfig: {
