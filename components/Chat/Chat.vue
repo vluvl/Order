@@ -5,20 +5,31 @@
         <div
           v-for="(message, index) in messages"
           :key="index"
-          class="chat-message my-1"
+          :class="[
+       	    'chat-message my-1',
+    	     message.user.admin ? 'system-message' : ''
+  	]"
         >
-          <span :style="{ color: message.user.color }">{{
-            message.user.username
-          }}</span
-          >:
-          <div class="html-message" v-html="message.message"></div>
+          <span class="timestamp">[{{ message.time }}]</span>
+          <span
+            :class="message.user.admin ? 'system-username' : ''"
+            :style="!message.user.admin ? { color: message.user.color } : {}"
+          >
+    	{{ message.user.username }}
+  	</span>:
+          <div
+            class="html-message"
+            :class="message.user.admin ? 'system-text' : ''"
+            v-html="message.message"
+          ></div>
         </div>
+
         <div ref="messagePanel" class="h-1"></div>
       </div>
     </div>
     <!-- Bottom -->
-    <div class="mb-1 table-row h-12">
-      <emote-menu v-if="emoteMenuVisible" :emotes="emotes" class="z-50" />
+    <div class="mb-1 table-row h-12 relative">
+      <emote-menu v-if="emoteMenuVisible" :emotes="emotes" class="z-50 absolute bottom-full mb-1 left-0 w-96 max-h-80"/>
 
       <form @submit.prevent="sendMessage">
         <div class="flex">
@@ -67,6 +78,7 @@
 
 <script>
 import EmoteMenu from "~/components/Chat/EmoteMenu.vue";
+
 export default {
   components: {
     EmoteMenu,
@@ -80,20 +92,54 @@ export default {
     };
   },
   mounted() {
-    this.$root.mainSocket.on("emoteDictionary", (emotes) => {
-      this.emotes = emotes;
-    });
     this.$root.mainSocket.on("newChatMessage", (message) => {
       const processedMessage = this.processMessage(message.message);
+
+      // Get current time in HH:MM format
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const timestamp = `${hours}:${minutes}`;
+
       const newMessageObject = {
         message: processedMessage,
         user: message.user,
+        time: timestamp, // store time here
       };
+
       this.messages.push(newMessageObject);
       if (this.messages.length > 30) {
         this.messages.shift();
       }
       this.setScrollToEnd();
+    });
+    const unlockAudio = () => {
+      const sound = new Audio();
+      sound.play().catch(() => {
+      });
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+    this.$root.mainSocket.on("playSound", ({type}) => {
+      let sound;
+
+      if (type === "join") {
+        sound = new Audio("/assets/sounds/join.mp3");
+      }
+
+      if (type === "leave") {
+        sound = new Audio("/assets/sounds/leave.mp3");
+      }
+
+      if (sound) {
+        sound.volume = 0.7; // adjust
+        sound.play().catch(() => {
+        });
+      }
+    });
+    this.$root.mainSocket.on("emoteDictionary", (emotes) => {
+      this.emotes = emotes;
     });
 
     this.$nuxt.$on("insertEmote", (emote) => {
@@ -147,16 +193,58 @@ export default {
   height: 100%;
   max-height: calc(100vh - 7.1rem);
 }
+
 .message-panel::-webkit-scrollbar {
   display: none;
 }
+
 .chat-message {
   word-break: break-word;
 }
+
 .html-message {
   display: inline;
 }
+
 .html-message img {
   display: inline;
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.system-username {
+  background: linear-gradient(
+    90deg,
+    #f87171,
+    #facc15,
+    #4ade80,
+    #60a5fa,
+    #c084fc
+  );
+  background-size: 200% 200%;
+  animation: rainbow 8s linear infinite;
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Slight glow for readability */
+.system-text {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+}
+
+.timestamp {
+  color: #a1a1aa; /* gray */
+  margin-right: 0.25rem;
 }
 </style>
