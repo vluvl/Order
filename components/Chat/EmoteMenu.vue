@@ -101,7 +101,11 @@ export default {
 
 <style>
 .emote-grid {
-  overflow-y: scroll;
+   overflow-y: auto;
+  background-color: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
 }
 .emote-grid::-webkit-scrollbar {
   display: none;
