@@ -1,11 +1,19 @@
 version: "3.3"
+
 services:
   radium:
-    container_name: radium
+    container_name: radium-order
+    volumes:
+      - ./custom-assets:/app/custom-assets\
+      - ./config:/app/config
     ports:
-      - "3000:3000"
+      - "${RADIUM_PORT}:3000"
     environment:
-      - "BASE_URL=https://radium.domain.com"
-      - INITIAL_SOURCE_TYPE=webrtc
-      - INITIAL_SOURCE_URL=wss://webrtc.radium.domain.com/my/stream/here
-    image: ghcr.io/zibbp/radium:next
+      BASE_URL: "${BASE_URL}"
+      INITIAL_SOURCE_TYPE: "${INITIAL_SOURCE_TYPE}"
+      INITIAL_SOURCE_URL: "${INITIAL_SOURCE_URL}"
+      ENABLE_CHAT: "${ENABLE_CHAT}"
+      REQUIRE_USERNAME: "${REQUIRE_USERNAME}"
+    build:
+      context: .
+      dockerfile: Dockerfile
