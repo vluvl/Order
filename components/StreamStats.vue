@@ -61,32 +61,25 @@
             <span>30s</span>
           </div>
         </div>
-        <div class="flex h-48 gap-1">
-          <div class="flex flex-col justify-between w-20 pr-2">
-            <div class="text-xs text-neutral-500">{{ formatBandwidth(maxBandwidth) }}</div>
-            <div class="text-xs text-neutral-500">{{ formatBandwidth(maxBandwidth * 0.75) }}</div>
-            <div class="text-xs text-neutral-500">{{ formatBandwidth(maxBandwidth * 0.5) }}</div>
-            <div class="text-xs text-neutral-500">{{ formatBandwidth(maxBandwidth * 0.25) }}</div>
-            <div class="text-xs text-neutral-500">0</div>
+        <div class="relative flex items-end justify-between h-48 gap-1">
+          <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute w-full border-t border-neutral-500" style="top: 0%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 25%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 50%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 75%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 100%"></div>
           </div>
-          <div class="flex-1 relative">
-            <div class="absolute inset-0 pointer-events-none">
-              <div class="absolute w-full border-t border-neutral-500" style="top: 0%"></div>
-              <div class="absolute w-full border-t border-neutral-500" style="top: 25%"></div>
-              <div class="absolute w-full border-t border-neutral-500" style="top: 50%"></div>
-              <div class="absolute w-full border-t border-neutral-500" style="top: 75%"></div>
-              <div class="absolute w-full border-t border-neutral-500" style="top: 100%"></div>
-            </div>
-            <div class="flex items-end justify-between h-full gap-1 ml-2">
-              <div
-                v-for="(value, index) in bandwidthHistory"
-                :key="index"
-                class="flex-1 bg-blue-500 rounded-t transition-all duration-300 relative z-10"
-                :style="{ height: calculateBarHeight(value) + '%' }"
-                :title="formatBandwidth(value)"
-              ></div>
-            </div>
-          </div>
+          <div
+            v-for="(value, index) in bandwidthHistory"
+            :key="index"
+            class="flex-1 bg-blue-500 rounded-t transition-all duration-300 relative z-10"
+            :style="{ height: calculateBarHeight(value) + '%' }"
+            :title="formatBandwidth(value)"
+          ></div>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-500 mt-2">
+          <span>0</span>
+          <span>{{ formatBandwidth(maxBandwidth) }}</span>
         </div>
       </div>
       
