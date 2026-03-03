@@ -43,17 +43,43 @@
       
       <div class="bg-neutral-700 rounded p-4">
         <div class="flex justify-between items-center mb-4">
-          <span class="text-neutral-400 text-sm">Bandwidth Graph (Last 60 seconds)</span>
+          <span class="text-neutral-400 text-sm">Bandwidth Graph (Last {{ updateRate * 60 }} seconds)</span>
           <span class="text-neutral-500 text-xs">{{ stats.lastUpdated }}</span>
         </div>
-        <div class="flex items-end justify-between h-48 gap-1">
+        <div class="mb-2">
+          <label class="text-neutral-400 text-xs">Update Rate: {{ updateRate }}s</label>
+          <input
+            type="range"
+            min="1"
+            max="30"
+            :value="updateRate"
+            @input="updateRate = parseInt($event.target.value)"
+            class="w-full h-2 bg-neutral-600 rounded-lg appearance-none cursor-pointer"
+          />
+          <div class="flex justify-between text-xs text-neutral-500 mt-1">
+            <span>1s</span>
+            <span>30s</span>
+          </div>
+        </div>
+        <div class="relative flex items-end justify-between h-48 gap-1">
+          <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute w-full border-t border-neutral-500" style="top: 0%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 25%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 50%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 75%"></div>
+            <div class="absolute w-full border-t border-neutral-500" style="top: 100%"></div>
+          </div>
           <div
             v-for="(value, index) in bandwidthHistory"
             :key="index"
-            class="flex-1 bg-blue-500 rounded-t transition-all duration-300"
+            class="flex-1 bg-blue-500 rounded-t transition-all duration-300 relative z-10"
             :style="{ height: calculateBarHeight(value) + '%' }"
             :title="formatBandwidth(value)"
           ></div>
+        </div>
+        <div class="flex justify-between text-xs text-neutral-500 mt-2">
+          <span>0</span>
+          <span>{{ formatBandwidth(maxBandwidth) }}</span>
         </div>
       </div>
       
@@ -107,6 +133,7 @@ export default {
       loading: true,
       error: null,
       refreshInterval: null,
+      updateRate: 5,
     };
   },
   async mounted() {
@@ -115,13 +142,23 @@ export default {
       
       this.refreshInterval = setInterval(() => {
         this.fetchStats();
-      }, 5000);
+      }, this.updateRate * 1000);
     }
   },
   beforeDestroy() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
+  },
+  watch: {
+    updateRate(newRate) {
+      if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+        this.refreshInterval = setInterval(() => {
+          this.fetchStats();
+        }, newRate * 1000);
+      }
+    },
   },
   methods: {
     async fetchStats() {
