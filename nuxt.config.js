@@ -19,8 +19,7 @@ export default {
   },
   serverMiddleware: [
     "~/server-middleware/assets.js",
-    "~/server-middleware/stats.js",
-    "~/server-middleware/stats-stream.js"
+    "~/server-middleware/stats.js"
   ],
 
   // Global page headers: https://go.nuxtjs.dev/config-head
