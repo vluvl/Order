@@ -68,7 +68,7 @@
         </div>
         <div>
           <span class="text-neutral-400">Max Connections: </span>
-          <span class="text-neutral-200">{{ stats.data.connectionTypes.webrtc }}</span>
+          <span class="text-neutral-200">{{ stats.connectionTypes?.webrtc || 0 }}</span>
         </div>
         <div>
           <span class="text-neutral-400">Max Connection Time: </span>
@@ -127,9 +127,26 @@ export default {
     async fetchStats() {
       try {
         const response = await this.$axios.$get('/api/stats');
-        this.stats = response.data;
         
-        const currentBandwidth = response.data.bandwidthOut.current;
+        if (!response || !response.data) {
+          throw new Error('Invalid response from server');
+        }
+        
+        const statsData = response.data;
+        
+        this.stats = {
+          ...this.stats,
+          viewers: statsData.viewers || 0,
+          bandwidthIn: statsData.bandwidthIn || { current: 0, average: 0, max: 0 },
+          bandwidthOut: statsData.bandwidthOut || { current: 0, average: 0, max: 0 },
+          totalBytesIn: statsData.totalBytesIn || 0,
+          totalBytesOut: statsData.totalBytesOut || 0,
+          connectionTime: statsData.connectionTime || '',
+          connectionTypes: statsData.connectionTypes || {},
+          lastUpdated: statsData.lastUpdated || '',
+        };
+        
+        const currentBandwidth = statsData.bandwidthOut?.current || 0;
         this.bandwidthHistory.push(currentBandwidth);
         if (this.bandwidthHistory.length > 60) {
           this.bandwidthHistory.shift();
@@ -171,7 +188,7 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
     getConnectionType() {
-      const types = this.stats.connectionTypes;
+      const types = this.stats.connectionTypes || {};
       const activeTypes = Object.entries(types)
         .filter(([_, count]) => count > 0)
         .map(([type]) => type.toUpperCase());
