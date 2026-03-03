@@ -9,7 +9,7 @@ const app = process.env.OME_APP || 'app';
 const stream = process.env.OME_STREAM || 'stream';
 const updateInterval = parseInt(process.env.STATS_UPDATE_INTERVAL) || 5000;
 
-function streamStats(req, res) {
+function streamStats(req, res, next) {
   if (req.url !== '/api/stats-stream') {
     return next();
   }

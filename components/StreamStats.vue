@@ -43,7 +43,7 @@
       
       <div class="bg-neutral-700 rounded p-4">
         <div class="flex justify-between items-center mb-4">
-          <span class="text-neutral-400 text-sm">Bandwidth Graph (Last {{ updateRate * 60 }} seconds)</span>
+          <span class="text-neutral-400 text-sm">Bandwidth Graph (Last {{ stats.updateRate * 60 }} seconds)</span>
           <span class="text-neutral-500 text-xs">{{ stats.lastUpdated }}</span>
         </div>
         <div class="mb-2">
@@ -134,6 +134,7 @@ export default {
         connectionTime: '',
         connectionTypes: {},
         lastUpdated: '',
+        updateRate: 5,
       },
       bandwidthHistory: [],
       maxBandwidth: 10000000,
@@ -141,33 +142,84 @@ export default {
       error: null,
       refreshInterval: null,
       updateRate: 5,
+      eventSource: null,
     };
   },
   async mounted() {
     if (process.client) {
       await this.fetchStats();
       
-      this.refreshInterval = setInterval(() => {
-        this.fetchStats();
-      }, this.updateRate * 1000);
+      this.setupSSE();
     }
   },
   beforeDestroy() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
   },
   watch: {
     updateRate(newRate) {
-      if (this.refreshInterval) {
-        clearInterval(this.refreshInterval);
-        this.refreshInterval = setInterval(() => {
-          this.fetchStats();
-        }, newRate * 1000);
+      if (this.eventSource) {
+        this.setupSSE(newRate);
       }
     },
   },
   methods: {
+    setupSSE(rate = this.updateRate) {
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
+
+      this.eventSource = new EventSource('/api/stats-stream');
+
+      this.eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.error) {
+            console.error('Stats error:', data.error);
+            return;
+          }
+
+          this.stats = {
+            ...this.stats,
+            viewers: data.viewers || 0,
+            bandwidthIn: data.bandwidthIn || { current: 0, average: 0, max: 0 },
+            bandwidthOut: data.bandwidthOut || { current: 0, average: 0, max: 0 },
+            totalBytesIn: data.totalBytesIn || 0,
+            totalBytesOut: data.totalBytesOut || 0,
+            connectionTime: data.connectionTime || '',
+            connectionTypes: data.connectionTypes || {},
+            lastUpdated: data.lastUpdated || '',
+            updateRate: data.updateRate || this.updateRate,
+          };
+
+          const currentBandwidth = data.bandwidthOut?.current || 0;
+          this.bandwidthHistory.push(currentBandwidth);
+          if (this.bandwidthHistory.length > rate * 60) {
+            this.bandwidthHistory.shift();
+          }
+
+          const maxVal = Math.max(...this.bandwidthHistory, 1000000);
+          this.maxBandwidth = Math.ceil(maxVal / 1000000) * 1000000;
+
+          this.error = null;
+        } catch (err) {
+          console.error('Failed to parse stats:', err);
+        }
+      };
+
+      this.eventSource.onerror = () => {
+        console.error('SSE connection error');
+        this.error = 'Lost connection to statistics stream';
+        setTimeout(() => {
+          this.setupSSE(rate);
+        }, 3000);
+      };
+    },
     async fetchStats() {
       try {
         const response = await this.$axios.$get('/api/stats');
