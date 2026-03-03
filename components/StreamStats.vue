@@ -68,7 +68,7 @@
         </div>
         <div>
           <span class="text-neutral-400">Max Connections: </span>
-          <span class="text-neutral-200">{{ stats.connectionTypes?.webrtc || 0 }}</span>
+          <span class="text-neutral-200">{{ getConnectionCount() }}</span>
         </div>
         <div>
           <span class="text-neutral-400">Max Connection Time: </span>
@@ -193,6 +193,10 @@ export default {
         .filter(([_, count]) => count > 0)
         .map(([type]) => type.toUpperCase());
       return activeTypes.length > 0 ? activeTypes.join(', ') : 'None';
+    },
+    getConnectionCount() {
+      const types = this.stats.connectionTypes || {};
+      return types.webrtc || 0;
     },
     formatConnectionTime(timestamp) {
       if (!timestamp) return 'N/A';
