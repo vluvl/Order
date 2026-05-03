@@ -1,6 +1,22 @@
 <template>
   <div class="mt-4 bg-neutral-800 rounded-lg p-4">
-    <h2 class="text-xl font-bold text-neutral-200 mb-4">Stream Statistics</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-neutral-200">Stream Statistics</h2>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-neutral-400">Off</span>
+        <button
+          @click="statsEnabled = !statsEnabled"
+          :class="statsEnabled ? 'bg-green-500' : 'bg-neutral-600'"
+          class="relative w-11 h-6 rounded-full transition-colors duration-200"
+        >
+          <span
+            :class="statsEnabled ? 'translate-x-6' : 'translate-x-1'"
+            class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform duration-200"
+          ></span>
+        </button>
+        <span class="text-sm text-neutral-400">On</span>
+      </div>
+    </div>
     
     <div v-if="loading" class="text-center text-neutral-400 py-4">
       Loading statistics...
@@ -134,15 +150,18 @@ export default {
       error: null,
       refreshInterval: null,
       updateRate: 5,
+      statsEnabled: false,
     };
   },
   async mounted() {
     if (process.client) {
-      await this.fetchStats();
-      
-      this.refreshInterval = setInterval(() => {
-        this.fetchStats();
-      }, this.updateRate * 1000);
+      if (this.statsEnabled) {
+        await this.fetchStats();
+        
+        this.refreshInterval = setInterval(() => {
+          this.fetchStats();
+        }, this.updateRate * 1000);
+      }
     }
   },
   beforeDestroy() {
@@ -157,6 +176,19 @@ export default {
         this.refreshInterval = setInterval(() => {
           this.fetchStats();
         }, newRate * 1000);
+      }
+    },
+    statsEnabled(newVal) {
+      if (newVal) {
+        this.fetchStats();
+        this.refreshInterval = setInterval(() => {
+          this.fetchStats();
+        }, this.updateRate * 1000);
+      } else {
+        if (this.refreshInterval) {
+          clearInterval(this.refreshInterval);
+          this.refreshInterval = null;
+        }
       }
     },
   },
