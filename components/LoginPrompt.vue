@@ -25,6 +25,8 @@
 </template>
 
 <script>
+import { adjectives, substantives } from "~/utils/names";
+
 export default {
   data() {
     return {
@@ -42,7 +44,9 @@ export default {
         this.$store.commit("setUser", this.user);
         this.$root.mainSocket.emit("newUserConnection", this.user);
       } else {
-        this.user.username = "User-" + Math.floor(Math.random() * 16777215).toString(16);
+        const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const noun = substantives[Math.floor(Math.random() * substantives.length)];
+        this.user.username = adj + " " + noun;
         this.user.color =
           "#" + Math.floor(Math.random() * 16777215).toString(16);
         this.$store.commit("setUser", this.user);
