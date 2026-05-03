@@ -1,3 +1,4 @@
+//Copy and rename this file without the .template
 export const adjectives = [
   "Brave",
   "Calm",

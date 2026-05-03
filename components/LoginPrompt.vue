@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { adjectives, substantives } from "~/utils/names";
+import { adjectives, substantives } from "~/utils/names.js.template";
 
 export default {
   data() {
@@ -46,7 +46,7 @@ export default {
       } else {
         const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
         const noun = substantives[Math.floor(Math.random() * substantives.length)];
-        this.user.username = adj + " " + noun;
+        this.user.username = noun + " " + adj; // revert this to make more sense in english
         this.user.color =
           "#" + Math.floor(Math.random() * 16777215).toString(16);
         this.$store.commit("setUser", this.user);
