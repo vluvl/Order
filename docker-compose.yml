@@ -4,7 +4,7 @@ services:
   radium:
     container_name: radium-order
     volumes:
-      - ./custom-assets:/app/custom-assets\
+      - ./custom-assets:/app/custom-assets/
       - ./config:/app/config
     ports:
       - "${RADIUM_PORT}:3000"
