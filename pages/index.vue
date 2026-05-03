@@ -39,7 +39,15 @@
       <div class="container mx-auto mt-4">
         <div class="grid grid-cols-12 gap-2">
           <div class="col-span-8"><settings /></div>
-          
+
+        </div>
+      </div>
+
+      <!-- Stream Statistics -->
+      <div class="container mx-auto mt-4">
+        <div class="grid grid-cols-12 gap-2">
+          <div class="col-span-8"><stream-stats /></div>
+
         </div>
       </div>
     </div>
@@ -51,6 +59,7 @@ import LoginPrompt from "~/components/LoginPrompt.vue";
 import Settings from "~/components/Settings.vue";
 import Users from "~/components/Users.vue";
 import Chat from "~/components/Chat/Chat.vue";
+import StreamStats from "~/components/StreamStats.vue";
 export default {
   data() {
       return {
@@ -64,6 +73,7 @@ export default {
     Settings,
     Users,
     Chat,
+    StreamStats,
   },
 };
 </script>
