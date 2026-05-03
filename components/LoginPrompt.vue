@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { adjectives, substantives } from "~/utils/names.js.template";
+import { adjectives, substantives } from "~/utils/names.js";
 
 export default {
   data() {
