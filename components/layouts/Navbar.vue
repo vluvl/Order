@@ -61,6 +61,14 @@ export default {
       teardown: false,
       name: "main",
     });
+    // Fires on first connect and on every reconnect:
+    // re-register the user from the store so reconnects don't drop it.
+    this.$root.mainSocket.on("connect", () => {
+      const user = this.$store.state.user;
+      if (user.username) {
+        this.$root.mainSocket.emit("newUserConnection", user);
+      }
+    });
   },
   methods: {
     playMethod() {

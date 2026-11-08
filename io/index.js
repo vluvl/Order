@@ -115,29 +115,43 @@ export default function async() {
     io.on("connection", (socket) => {
       connections.push(socket);
 
-      socket.on("newUserConnection", (user) => {
-        const userObject = {
-          id: socket.id,
-          username: user.username,
-          color: user.color,
-          admin: false,
-        };
-        users.push(userObject);
+      // Send current state to the new socket
+      io.to(socket.id).emit("usersList", users);
+      io.to(socket.id).emit("sourcesList", sources);
+      io.to(socket.id).emit("emoteDictionary", emotes);
 
+      socket.on("newUserConnection", (user) => {
+        const existing = users.find(
+          (obj) => obj.username == user.username
+        );
+        if (existing) {
+          // Same username already connected (e.g. a reconnect):
+          // update the entry in place, no join message/sound.
+          existing.id = socket.id;
+          existing.color = user.color;
+        } else {
+          users.push({
+            id: socket.id,
+            username: user.username,
+            color: user.color,
+            admin: false,
+          });
+          io.emit("newChatMessage", {
+            message: texts.messages.userJoined.replace(
+              "{username}",
+              user.username
+            ),
+            user: SYSTEM_USER,
+          });
+          io.emit("playSound", {
+            type: "join",
+          });
+        }
         io.emit("usersList", users);
-        io.to(socket.id).emit("sourcesList", sources);
-        io.to(socket.id).emit("emoteDictionary", emotes);
-        // TODO: SEND STATE TO USER
-        io.emit("newChatMessage", {
-          message: texts.messages.userJoined.replace(
-            "{username}",
-            user.username
-          ),
-          user: SYSTEM_USER,
-        });
-        io.emit("playSound", {
-          type: "join",
-        });
+      });
+
+      socket.on("requestUsersList", () => {
+        io.to(socket.id).emit("usersList", users);
       });
 
       socket.on("addPlayerSource", (source) => {
@@ -175,10 +189,14 @@ export default function async() {
             ),
             user: SYSTEM_USER,
           });
+          io.emit("playSound", {
+            type: "leave",
+          });
         }
-        io.emit("playSound", {
-          type: "leave",
-        });
+        const c = connections.indexOf(socket);
+        if (c > -1) {
+          connections.splice(c, 1);
+        }
         io.emit("usersList", users);
       });
     });

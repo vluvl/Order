@@ -40,6 +40,9 @@ export default {
     this.$root.mainSocket.on("usersList", (users) => {
       this.users = users;
     });
+    // Safety net: a usersList broadcast may have arrived before this
+    // listener was registered, so request the current list once.
+    this.$root.mainSocket.emit("requestUsersList");
   },
 };
 </script>
