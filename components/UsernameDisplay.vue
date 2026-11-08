@@ -15,7 +15,7 @@
     <span
       v-else-if="isGradient"
       class="name-gradient"
-      :style="{ background: gradientBackground }"
+      :style="{ 'background-image': gradientBackground }"
       >{{ user.username }}</span
     >
     <!-- Solid -->
