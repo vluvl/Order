@@ -25,15 +25,21 @@ export default {
   },
   async mounted() {
     window.Hls = Hls;
-    this.$root.mainSocket.on("sourcesList", (sources) => {
-      this.options.sources = sources;
-      this.player.load(this.options);
-    });
 
     const OvenPlayer = await import("ovenplayer");
     Vue.use(OvenPlayer);
 
     this.player = OvenPlayer.create(this.$refs.player, this.options);
+
+    // Registered after the player exists, because the handler calls
+    // this.player.load().
+    this.$root.mainSocket.on("sourcesList", (sources) => {
+      this.options.sources = sources;
+      this.player.load(this.options);
+    });
+    // Safety net: the sourcesList broadcast may have arrived before
+    // this listener was registered, so request the current list once.
+    this.$root.mainSocket.emit("requestSourcesList");
 
     this.$root.mainSocket.on("serverPlayerPlay", (username) => {
       this.$toast.info(`${username} Playing`, {

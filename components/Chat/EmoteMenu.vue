@@ -20,6 +20,11 @@
           alt=""
         />
         <img
+          v-if="currentEmote.source == 'ffzA'"
+          :src="'https://cdn.frankerfacez.com/emote/' + currentEmote.id + '/1a'"
+          alt=""
+        />
+        <img
           v-if="currentEmote.source == '7tv'"
           :src="'https://cdn.7tv.app/emote/' + currentEmote.id + '/1x'"
           alt=""
@@ -47,6 +52,12 @@
         <img
           v-if="emote.source == 'ffz'"
           :src="'https://cdn.frankerfacez.com/emote/' + emote.id + '/1'"
+          :title="emote.code"
+          :alt="emote.code"
+        />
+        <img
+          v-if="emote.source == 'ffzA'"
+          :src="'https://cdn.frankerfacez.com/emote/' + emote.id + '/1a'"
           :title="emote.code"
           :alt="emote.code"
         />

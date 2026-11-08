@@ -92,6 +92,9 @@ export default {
     this.$root.mainSocket.on("sourcesList", (sources) => {
       this.sources = sources;
     });
+    // Safety net: the sourcesList broadcast may have arrived before
+    // this listener was registered, so request the current list once.
+    this.$root.mainSocket.emit("requestSourcesList");
   },
   methods: {
     addSource() {

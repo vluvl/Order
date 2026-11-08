@@ -142,6 +142,9 @@ export default {
     this.$root.mainSocket.on("emoteDictionary", (emotes) => {
       this.emotes = emotes;
     });
+    // Safety net: the emoteDictionary broadcast may have arrived before
+    // this listener was registered, so request the current dictionary once.
+    this.$root.mainSocket.emit("requestEmoteDictionary");
 
     this.$nuxt.$on("insertEmote", (emote) => {
       this.messageText += ` ${emote.code} `;
@@ -161,21 +164,41 @@ export default {
     },
     processMessage(text) {
       const emotes = this.emotes;
+      // Without emotes there is nothing to replace; returning early also
+      // avoids the empty-pattern regex matching every position.
+      if (!emotes || emotes.length === 0) {
+        return text;
+      }
+      // Longest codes first so a code that is a prefix of another
+      // (e.g. "K" vs "Kappa") matches as a whole. Escape regex specials
+      // (emote codes may contain "(", "|", "?" etc.).
+      const codes = emotes
+        .map((emote) => emote.code)
+        .sort((a, b) => b.length - a.length);
       const emotesRegex = new RegExp(
-        emotes.map((emote) => emote.code).join("|"),
+        codes
+          .map((code) => code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|"),
         "g"
       );
       return text.replace(emotesRegex, (match) => {
         const emote = emotes.find((emote) => emote.code === match);
+        if (!emote) {
+          return match;
+        }
         if (emote.source == "bttv") {
           return `<img  src="https://cdn.betterttv.net/emote/${emote.id}/1x" class="mr-1" title="${emote.code}" alt="${emote.code}" />`;
         }
         if (emote.source == "ffz") {
           return `<img src="https://cdn.frankerfacez.com/emote/${emote.id}/1" class="mr-1" title="${emote.code}" alt="${emote.code}" />`;
         }
+        if (emote.source == "ffzA") {
+          return `<img src="https://cdn.frankerfacez.com/emote/${emote.id}/1a" class="mr-1" title="${emote.code}" alt="${emote.code}" />`;
+        }
         if (emote.source == "7tv") {
           return `<img src="https://cdn.7tv.app/emote/${emote.id}/1x" class="mr-1" title="${emote.code}" alt="${emote.code}" />`;
         }
+        return match;
       });
     },
     setScrollToEnd() {

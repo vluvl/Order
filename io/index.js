@@ -176,6 +176,14 @@ export default function async() {
         io.to(socket.id).emit("usersList", users);
       });
 
+      socket.on("requestEmoteDictionary", () => {
+        io.to(socket.id).emit("emoteDictionary", emotes);
+      });
+
+      socket.on("requestSourcesList", () => {
+        io.to(socket.id).emit("sourcesList", sources);
+      });
+
       socket.on("addPlayerSource", (source) => {
         sources.push(source);
         io.emit("sourcesList", sources);
