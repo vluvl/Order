@@ -14,6 +14,7 @@ services:
       INITIAL_SOURCE_URL: "${INITIAL_SOURCE_URL}"
       ENABLE_CHAT: "${ENABLE_CHAT}"
       REQUIRE_USERNAME: "${REQUIRE_USERNAME}"
+      BTTV_API_KEY: "${BTTV_API_KEY}"
     build:
       context: .
       dockerfile: Dockerfile

@@ -11,10 +11,11 @@
   	]"
         >
           <span class="timestamp">[{{ message.time }}]</span>
-          <span
-            :class="message.user.admin ? 'system-username' : ''"
-            :style="!message.user.admin ? { color: message.user.color } : {}"
-          >
+          <username-display
+            v-if="!message.user.admin"
+            :user="message.user"
+          />
+          <span v-else class="system-username">
     	{{ message.user.username }}
   	</span>:
           <div

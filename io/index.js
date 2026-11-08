@@ -3,6 +3,7 @@ import socketIO from "socket.io";
 import axios from "axios";
 
 const texts = require("../utils/texts");
+const { normalizeProfile } = require("../utils/color.js");
 
 export default function async() {
   this.nuxt.hook("render:before", async (renderer) => {
@@ -48,13 +49,20 @@ export default function async() {
     }
 
     // Fetch emotes
+    // BTTV's shared emote endpoint requires an API key (Bearer token).
+    // The cached global endpoint is public and works without one.
+    const bttvApiKey = process.env.BTTV_API_KEY;
+    const bttvHeaders = bttvApiKey
+      ? { Authorization: `Bearer ${bttvApiKey}` }
+      : {};
     const fetchEmotes = async () => {
       // BTTV
       console.log("Fetching BTTV emotes...");
       try {
-        // BTTV Global
+        // BTTV Global (public, cached)
         const globalEmotes = await axios.get(
-          "https://api.betterttv.net/3/cached/emotes/global"
+          "https://api.betterttv.net/3/cached/emotes/global",
+          { headers: bttvHeaders }
         );
 
         for (const emote of globalEmotes.data) {
@@ -65,21 +73,32 @@ export default function async() {
           });
         }
 
-        // BTTV Shared Top
-        const sharedEmotes = await axios.get(
-          "https://api.betterttv.net/3/emotes/shared/top?limit=100"
-        );
+        // BTTV Shared Top (requires an API key)
+        if (bttvApiKey) {
+          const sharedEmotes = await axios.get(
+            "https://api.betterttv.net/3/emotes/shared/top?limit=100",
+            { headers: bttvHeaders }
+          );
 
-        for (const emote of sharedEmotes.data) {
-          emotes.push({
-            id: emote.emote.id,
-            code: emote.emote.code,
-            source: "bttv",
-          });
+          for (const emote of sharedEmotes.data) {
+            emotes.push({
+              id: emote.emote.id,
+              code: emote.emote.code,
+              source: "bttv",
+            });
+          }
+        } else {
+          console.log(
+            "BTTV_API_KEY not set - skipping BTTV shared emotes"
+          );
         }
-
       } catch (error) {
-        console.log('Error fetching BTTV emotes: ', error);
+        console.log(
+          "Error fetching BTTV emotes:",
+          error.response && error.response.data
+            ? error.response.data.message || error.response.data
+            : error.message
+        );
       }
       // FFZ
       console.log("Fetching FFZ emotes...");
@@ -121,6 +140,7 @@ export default function async() {
       io.to(socket.id).emit("emoteDictionary", emotes);
 
       socket.on("newUserConnection", (user) => {
+        const profile = normalizeProfile(user);
         const existing = users.find(
           (obj) => obj.username == user.username
         );
@@ -128,12 +148,14 @@ export default function async() {
           // Same username already connected (e.g. a reconnect):
           // update the entry in place, no join message/sound.
           existing.id = socket.id;
-          existing.color = user.color;
+          existing.style = profile.style;
+          existing.colors = profile.colors;
         } else {
           users.push({
             id: socket.id,
             username: user.username,
-            color: user.color,
+            style: profile.style,
+            colors: profile.colors,
             admin: false,
           });
           io.emit("newChatMessage", {
