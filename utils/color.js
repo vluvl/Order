@@ -1,7 +1,7 @@
 // Shared color math and user name-style helpers.
 // Used by ColorWheel.vue (picker), UsernameDisplay.vue (rendering),
 // LoginPrompt.vue (persistence) and io/index.js (server-side validation).
-
+//
 export const NAME_STYLES = {
   solid: 1,
   "gradient-2": 2,
